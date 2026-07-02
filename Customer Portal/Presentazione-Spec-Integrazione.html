@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spec Integrazione Documentale - Customer Portal</title>
+  <style>
+    /* ===========================================
+       THEME
+       =========================================== */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f4f7f4;
+      --bg-dark: #143622;
+      --text-primary: #1a1a1a;
+      --text-secondary: #4a4a4a;
+      --text-on-dark: #ffffff;
+      --accent: #76b82a;
+      --accent-strong: #2d6a2e;
+      --accent-blue: #0072ce;
+      --accent-rose: #c4376b;
+      --accent-amber: #f5a623;
+      --shadow: 0 10px 30px rgba(20, 54, 34, 0.12);
+      --slide-padding: clamp(1.4rem, 4vw, 4rem);
+      --duration: 0.4s;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --maxw: 1160px;
+    }
+
+    /* ===========================================
+       BASE
+       =========================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      overflow-y: auto;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    .progress-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: rgba(118, 184, 42, 0.15);
+      z-index: 50;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+      transition: width 180ms linear;
+    }
+
+    .nav-dots {
+      position: fixed;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      display: grid;
+      gap: 10px;
+    }
+
+    .nav-dots button {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 26, 26, 0.35);
+      background: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .nav-dots button[aria-current="true"] {
+      background: var(--accent);
+      border-color: var(--accent-strong);
+      transform: scale(1.2);
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      z-index: 40;
+    }
+
+    /* ===========================================
+       SLIDES
+       =========================================== */
+    main {
+      width: 100%;
+    }
+
+    .slide {
+      min-height: 100vh;
+      scroll-snap-align: start;
+      display: flex;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: var(--slide-padding);
+    }
+
+    .slide-inner {
+      width: min(100%, var(--maxw));
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.1rem;
+    }
+
+    .slide-title {
+      font-family: "Arial Black", Arial, Helvetica, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      line-height: 1.15;
+    }
+
+    .slide-subtitle {
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+      font-weight: 700;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity var(--duration) var(--ease), transform var(--duration) var(--ease);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .slide.visible .reveal:nth-child(1) { transition-delay: 0.08s; }
+    .slide.visible .reveal:nth-child(2) { transition-delay: 0.16s; }
+    .slide.visible .reveal:nth-child(3) { transition-delay: 0.24s; }
+    .slide.visible .reveal:nth-child(4) { transition-delay: 0.32s; }
+    .slide.visible .reveal:nth-child(5) { transition-delay: 0.40s; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid rgba(20, 54, 34, 0.14);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 1rem;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+      margin-bottom: 0.5rem;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 0.25rem 0.55rem;
+      color: #fff;
+      background: var(--accent-strong);
+      margin-right: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+
+    ul.clean {
+      list-style: none;
+      padding-left: 0;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    ul.clean li {
+      position: relative;
+      padding-left: 1.2rem;
+      color: var(--text-primary);
+    }
+
+    ul.clean li::before {
+      content: "▪";
+      position: absolute;
+      left: 0;
+      top: -0.03rem;
+      font-size: 1.1em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .cover {
+      background:
+        radial-gradient(1200px 600px at 95% 90%, rgba(118, 184, 42, 0.28), transparent 60%),
+        linear-gradient(140deg, #12341f, #1f5f30 55%, #76b82a);
+      color: var(--text-on-dark);
+    }
+
+    .cover .slide-subtitle,
+    .cover p,
+    .cover li {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .cover .slide-title {
+      color: #fff;
+      font-size: clamp(2rem, 5.2vw, 4rem);
+      max-width: 16ch;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 0.8rem;
+    }
+
+    .cover-meta span {
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 999px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .agenda-item {
+      display: grid;
+      grid-template-columns: 2.1rem 1fr;
+      gap: 0.75rem;
+      align-items: start;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .agenda-num {
+      font-family: "Arial Black", Arial, Helvetica, sans-serif;
+      color: var(--accent);
+      font-size: 1.35rem;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.7rem;
+      align-items: stretch;
+      margin-top: 0.7rem;
+    }
+
+    .node {
+      border-radius: 12px;
+      border: 1px solid rgba(20, 54, 34, 0.2);
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 0.7rem;
+      font-size: 0.83rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    .node strong {
+      color: var(--accent-strong);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .arrow {
+      text-align: center;
+      align-self: center;
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    .kpi-wrap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .kpi {
+      background: #fff;
+      border: 1px solid rgba(20, 54, 34, 0.16);
+      border-radius: 14px;
+      padding: 0.8rem;
+      box-shadow: var(--shadow);
+    }
+
+    .kpi .value {
+      font-family: "Arial Black", Arial, Helvetica, sans-serif;
+      font-size: clamp(1.2rem, 2.3vw, 1.9rem);
+      color: var(--accent-strong);
+      line-height: 1;
+    }
+
+    .kpi .label {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.8rem;
+      margin-top: 0.6rem;
+    }
+
+    .time-step {
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff, #f8faf8);
+      border: 1px solid rgba(20, 54, 34, 0.16);
+      padding: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+
+    .time-step strong {
+      display: block;
+      color: var(--accent-strong);
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    .chart-box {
+      border-radius: 16px;
+      border: 1px solid rgba(20, 54, 34, 0.18);
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .thankyou {
+      background: linear-gradient(135deg, #1d4f29, #76b82a);
+      color: #fff;
+      text-align: center;
+    }
+
+    .thankyou .slide-inner {
+      align-items: center;
+      text-align: center;
+    }
+
+    .thankyou .slide-title {
+      color: #fff;
+      font-size: clamp(2.3rem, 8vw, 5rem);
+    }
+
+    .small {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 980px) {
+      .grid-2,
+      .flow,
+      .kpi-wrap,
+      .timeline {
+        grid-template-columns: 1fr;
+      }
+
+      .arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-dots,
+      .keyboard-hint {
+        display: none;
+      }
+
+      .slide {
+        min-height: auto;
+        padding-top: 1.8rem;
+        padding-bottom: 1.8rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html, body {
+        scroll-behavior: auto;
+      }
+      .reveal,
+      .nav-dots button,
+      .progress-bar {
+        transition: none;
+      }
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-wrap" aria-hidden="true">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <nav class="nav-dots" id="navDots" aria-label="Navigazione slide"></nav>
+  <div class="keyboard-hint" aria-hidden="true">Freccie, spazio, scroll o swipe per navigare</div>
+
+  <main id="slidesRoot">
+    <section class="slide cover" data-title="Cover">
+      <div class="slide-inner">
+        <p class="slide-subtitle reveal">Customer Portal Ansaldo</p>
+        <h1 class="slide-title reveal">Spec integrazione documentale<br />SF - APIM - SPE - Team Center</h1>
+        <p class="reveal">Presentazione basata su specifica funzionale consolidata da onboarding e WBS Cluster.</p>
+        <div class="cover-meta reveal">
+          <span>Status: Draft</span>
+          <span>Data: 02/07/2026</span>
+          <span>Perimetro: Document Management</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Agenda">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Meeting Agenda</h2>
+        <p class="slide-subtitle reveal">Roadmap dei contenuti</p>
+        <div class="card reveal">
+          <div class="agenda-item"><div class="agenda-num">1</div><div>Contesto, obiettivi e perimetro</div></div>
+          <div class="agenda-item"><div class="agenda-num">2</div><div>Architettura e flussi di integrazione</div></div>
+          <div class="agenda-item"><div class="agenda-num">3</div><div>User stories prioritarie</div></div>
+          <div class="agenda-item"><div class="agenda-num">4</div><div>Requisiti funzionali e non funzionali</div></div>
+          <div class="agenda-item"><div class="agenda-num">5</div><div>Entita chiave, edge case e metriche di successo</div></div>
+          <div class="agenda-item"><div class="agenda-num">6</div><div>Rischi, dipendenze e prossimi passi</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Contesto e Scope">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Contesto e Scope</h2>
+        <p class="slide-subtitle reveal">Cosa copre la feature</p>
+        <div class="grid-2 reveal">
+          <article class="card">
+            <h3>In Scope</h3>
+            <ul class="clean">
+              <li>Integrazione documentale SF-MS/APIM/SPE/TC</li>
+              <li>Flussi upload, retrieval, view file</li>
+              <li>Gestione CommentSheet bidirezionale</li>
+              <li>Test E2E e supporto UAT stream integrazione</li>
+              <li>Preview strategy per formati supportati + fallback download</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Out of Scope</h3>
+            <ul class="clean">
+              <li>Migrazioni massive documentali fuori flusso ordinario</li>
+              <li>Viewer custom e lifecycle avanzato non richiesto</li>
+              <li>Remediation infrastrutturali estese non pianificate</li>
+              <li>Gestione business completa ticketing IPS</li>
+              <li>Editing Office in-browser tramite viewer SharePoint nativo</li>
+              <li>Condivisione pubblica file con link diretti SPE/Graph</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Architettura target">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Architettura target</h2>
+        <p class="slide-subtitle reveal">Flusso tecnico principale documentale</p>
+
+        <div class="flow reveal" aria-label="Catena di integrazione">
+          <div class="node"><strong>Salesforce / SF-MS</strong><span>Richiesta file<br />Esito upload<br />View</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><strong>Azure APIM</strong><span>Orchestrazione API<br />Policy / Security</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><strong>Proxy On-Prem</strong><span>Bridge verso TC<br />Connettivita controllata</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><strong>Team Center</strong><span>Release documenti<br />Metadata sorgente</span></div>
+          <div class="arrow">↔</div>
+          <div class="node"><strong>SharePoint Embedded</strong><span>Upload/Retrieval file<br />Permessi Graph</span></div>
+        </div>
+
+        <p class="small reveal">Nota: il proxy on-prem e un prerequisito critico per tutte le chiamate verso Team Center.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="User Stories P1">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">User Stories Priorita P1</h2>
+        <p class="slide-subtitle reveal">MVP end-to-end documentale</p>
+        <div class="grid-2 reveal">
+          <article class="card">
+            <h3>US1 - Documento TC verso Portale</h3>
+            <div class="pill">P1</div>
+            <ul class="clean">
+              <li>Rilascio documento in Team Center</li>
+              <li>Upload su SPE e reference in Salesforce</li>
+              <li>Visibilita documento nel contesto progetto</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>US2 - CommentSheet bidirezionale</h3>
+            <div class="pill">P1</div>
+            <ul class="clean">
+              <li>Invio da Salesforce a Team Center via APIM/proxy</li>
+              <li>Recupero file correlato da SPE</li>
+              <li>Gestione errori e audit su metadata</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="User Stories P2 ed Edge Case">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">User Stories P2 e Edge Cases</h2>
+        <p class="slide-subtitle reveal">Qualita operativa e readiness</p>
+        <div class="grid-2 reveal">
+          <article class="card">
+            <h3>US3 + US4</h3>
+            <div class="pill">P2</div>
+            <ul class="clean">
+              <li>View file tramite identificativo e permessi coerenti</li>
+              <li>Checklist prerequisiti e readiness go-live</li>
+              <li>Tracciamento test E2E e supporto UAT</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Edge Cases critici</h3>
+            <ul class="clean">
+              <li>Mismtach identificativo file TC/SPE/SF</li>
+              <li>Timeout proxy on-prem o APIM</li>
+              <li>Permessi Graph incompleti</li>
+              <li>Metadata obbligatori mancanti</li>
+              <li>Accesso non autorizzato in view file</li>
+              <li>Formato non supportato: fallback obbligatorio a download</li>
+              <li>Token preview scaduto/alterato o riutilizzato</li>
+              <li>HTML EML/MSG non sanificato in preview</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Requisiti Funzionali">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Requisiti Funzionali</h2>
+        <p class="slide-subtitle reveal">Estratto FR-001...FR-018</p>
+        <div class="grid-2 reveal">
+          <article class="card">
+            <h3>Core Flow</h3>
+            <ul class="clean">
+              <li>FR-001/002: acquisizione e trasferimento file lungo la catena SF-APIM-Proxy-TC</li>
+              <li>FR-003/004: upload SPE, identificativo univoco e view nel portale</li>
+              <li>FR-005/006: supporto completo a CommentSheet e retrieval da SPE</li>
+              <li>FR-017: nessuna esposizione URL diretta SPE/Graph al browser</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Controlli, Formati e Accesso</h3>
+            <ul class="clean">
+              <li>FR-007: esiti con codici errore + correlation id</li>
+              <li>FR-008: log tecnici su ogni hop</li>
+              <li>FR-009: integration test E2E obbligatori</li>
+              <li>FR-012: policy server-side preview vs download</li>
+              <li>FR-013/014/015: preview PDF/immagini/Office/EML-MSG via proxy</li>
+              <li>FR-016: ZIP/CAD con download controllato</li>
+              <li>FR-018: endpoint dedicati preview/download con auth Salesforce</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="NFR e Entita">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">NFR ed Entita Chiave</h2>
+        <p class="slide-subtitle reveal">Sicurezza, osservabilita, manutenibilita</p>
+        <div class="grid-2 reveal">
+          <article class="card">
+            <h3>Non Functional Requirements</h3>
+            <ul class="clean">
+              <li>NFR-001: idempotenza per evitare duplicazioni</li>
+              <li>NFR-002: enforcement permessi API/rete</li>
+              <li>NFR-003: correlation id cross-sistema</li>
+              <li>NFR-004: error taxonomy azionabile</li>
+              <li>NFR-005: documentazione e versioning interfacce</li>
+              <li>NFR-006: token firmati (HMAC), TTL breve, user-bound</li>
+              <li>NFR-007: hardening header HTTP preview/download</li>
+              <li>NFR-008: data leakage prevention (no direct link)</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Key Entities</h3>
+            <ul class="clean">
+              <li>Project</li>
+              <li>Document</li>
+              <li>CommentSheet</li>
+              <li>Integration Transaction</li>
+              <li>Permission Context</li>
+              <li>Preview Policy</li>
+              <li>Access Token</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Success Criteria">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Success Criteria</h2>
+        <p class="slide-subtitle reveal">Misure oggettive di completamento</p>
+
+        <div class="kpi-wrap reveal" aria-label="KPI principali">
+          <div class="kpi"><div class="value" data-counter="95">0</div><div class="label">SC-001 success rate trasferimenti validi (%)</div></div>
+          <div class="kpi"><div class="value" data-counter="100">0</div><div class="label">SC-002 transazioni con correlation id (%)</div></div>
+          <div class="kpi"><div class="value" data-counter="100">0</div><div class="label">SC-003 accessi non autorizzati bloccati (%)</div></div>
+          <div class="kpi"><div class="value" data-counter="100">0</div><div class="label">SC-004 copertura casi test flussi ATT.2.x (%)</div></div>
+          <div class="kpi"><div class="value" data-counter="0">0</div><div class="label">SC-005 blocker critici aperti alla gate</div></div>
+          <div class="kpi"><div class="value" data-counter="100">0</div><div class="label">SC-006 preview solo via proxy (%)</div></div>
+          <div class="kpi"><div class="value" data-counter="100">0</div><div class="label">SC-007 fallback download formati non preview (%)</div></div>
+        </div>
+
+        <div class="chart-box reveal">
+          <canvas id="criteriaChart" width="1000" height="220" role="img" aria-label="Grafico barre obiettivi success criteria"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Timeline WBS">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Timeline di riferimento (WBS)</h2>
+        <p class="slide-subtitle reveal">Sequenza maggio - settembre 2026</p>
+
+        <div class="timeline reveal">
+          <div class="time-step"><strong>Maggio</strong>Analisi interfacce e fonti</div>
+          <div class="time-step"><strong>Giugno</strong>Setup SPE / APIM / proxy on-prem</div>
+          <div class="time-step"><strong>Luglio</strong>Sviluppo flussi upload-view-commentsheet</div>
+          <div class="time-step"><strong>Agosto</strong>Documentazione tecnica e consolidamento</div>
+          <div class="time-step"><strong>Settembre</strong>Integration test E2E e supporto UAT</div>
+        </div>
+
+        <p class="small reveal">Dipendenze chiave: connettivita proxy, permessi Graph, disponibilita interfacce Team Center.</p>
+      </div>
+    </section>
+
+    <section class="slide thankyou" data-title="Chiusura">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Thank You</h2>
+        <p class="reveal">Spec pronta per passare alla fase di piano tecnico e task breakdown.</p>
+        <p class="reveal">Customer Portal - Integrazione Documentale</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ===========================================
+       PRESENTATION CONTROLLER
+       - Keyboard navigation
+       - Mouse wheel snapping
+       - Touch swipe
+       - Nav dots and progress
+       - Intersection observer for reveals
+       =========================================== */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.root = document.getElementById('slidesRoot');
+        this.navDots = document.getElementById('navDots');
+        this.progressBar = document.getElementById('progressBar');
+        this.activeIndex = 0;
+        this.isProgrammatic = false;
+        this.touchStartY = null;
+        this.counterPlayed = false;
+
+        this.initNavDots();
+        this.initObserver();
+        this.bindEvents();
+        this.updateUI(0);
+        this.drawCriteriaChart();
+      }
+
+      initNavDots() {
+        this.slides.forEach((slide, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.setAttribute('aria-label', `Vai alla slide ${idx + 1}: ${slide.dataset.title || 'senza titolo'}`);
+          btn.addEventListener('click', () => this.goTo(idx));
+          this.navDots.appendChild(btn);
+        });
+      }
+
+      initObserver() {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              const index = this.slides.indexOf(entry.target);
+              if (index !== -1) {
+                this.activeIndex = index;
+                this.updateUI(index);
+                if (this.slides[index].dataset.title === 'Success Criteria') {
+                  this.animateCounters();
+                }
+              }
+            }
+          });
+        }, { threshold: 0.55 });
+
+        this.slides.forEach((slide) => observer.observe(slide));
+      }
+
+      bindEvents() {
+        window.addEventListener('keydown', (e) => {
+          const key = e.key;
+          if (key === 'ArrowDown' || key === 'ArrowRight' || key === ' ' || key === 'PageDown') {
+            e.preventDefault();
+            this.next();
+          }
+          if (key === 'ArrowUp' || key === 'ArrowLeft' || key === 'PageUp') {
+            e.preventDefault();
+            this.prev();
+          }
+          if (key === 'Home') {
+            e.preventDefault();
+            this.goTo(0);
+          }
+          if (key === 'End') {
+            e.preventDefault();
+            this.goTo(this.slides.length - 1);
+          }
+        }, { passive: false });
+
+        let wheelLock = false;
+        window.addEventListener('wheel', (e) => {
+          if (wheelLock) return;
+          if (Math.abs(e.deltaY) < 25) return;
+          wheelLock = true;
+          if (e.deltaY > 0) this.next();
+          else this.prev();
+          setTimeout(() => { wheelLock = false; }, 420);
+        }, { passive: true });
+
+        window.addEventListener('touchstart', (e) => {
+          this.touchStartY = e.changedTouches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+          if (this.touchStartY == null) return;
+          const endY = e.changedTouches[0].clientY;
+          const dy = this.touchStartY - endY;
+          if (Math.abs(dy) > 45) {
+            if (dy > 0) this.next();
+            else this.prev();
+          }
+          this.touchStartY = null;
+        }, { passive: true });
+
+        window.addEventListener('scroll', () => {
+          if (this.isProgrammatic) return;
+          this.updateProgressByScroll();
+        }, { passive: true });
+      }
+
+      goTo(index) {
+        const clamped = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.isProgrammatic = true;
+        this.slides[clamped].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => { this.isProgrammatic = false; }, 550);
+      }
+
+      next() {
+        this.goTo(this.activeIndex + 1);
+      }
+
+      prev() {
+        this.goTo(this.activeIndex - 1);
+      }
+
+      updateUI(index) {
+        const dots = Array.from(this.navDots.querySelectorAll('button'));
+        dots.forEach((dot, i) => {
+          dot.setAttribute('aria-current', i === index ? 'true' : 'false');
+        });
+        const progress = ((index + 1) / this.slides.length) * 100;
+        this.progressBar.style.width = `${progress}%`;
+      }
+
+      updateProgressByScroll() {
+        const scrollTop = window.scrollY;
+        const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight);
+        const pct = (scrollTop / maxScroll) * 100;
+        this.progressBar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+      }
+
+      animateCounters() {
+        if (this.counterPlayed) return;
+        this.counterPlayed = true;
+        const counters = Array.from(document.querySelectorAll('[data-counter]'));
+
+        counters.forEach((el) => {
+          const target = Number(el.getAttribute('data-counter'));
+          const start = performance.now();
+          const dur = 900;
+
+          const tick = (now) => {
+            const p = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - p, 3);
+            const val = Math.round(target * eased);
+            el.textContent = `${val}${target > 0 ? '%' : ''}`;
+            if (p < 1) requestAnimationFrame(tick);
+          };
+
+          requestAnimationFrame(tick);
+        });
+      }
+
+      drawCriteriaChart() {
+        const canvas = document.getElementById('criteriaChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const labels = ['SC-001', 'SC-002', 'SC-003', 'SC-004', 'SC-005', 'SC-006', 'SC-007'];
+        const values = [95, 100, 100, 100, 0, 100, 100];
+        const colors = ['#76b82a', '#0072ce', '#2d6a2e', '#c4376b', '#f5a623', '#00b4d8', '#1d4f29'];
+
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth || 1000;
+        const h = 220;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+        ctx.scale(dpr, dpr);
+
+        const pad = { top: 20, right: 20, bottom: 40, left: 30 };
+        const chartW = w - pad.left - pad.right;
+        const chartH = h - pad.top - pad.bottom;
+        const barGap = 18;
+        const barW = (chartW - barGap * (values.length - 1)) / values.length;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#6a6a6a';
+
+        for (let i = 0; i <= 5; i++) {
+          const y = pad.top + (chartH / 5) * i;
+          ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+          ctx.beginPath();
+          ctx.moveTo(pad.left, y);
+          ctx.lineTo(w - pad.right, y);
+          ctx.stroke();
+          ctx.fillText(String(100 - i * 20), 4, y + 4);
+        }
+
+        values.forEach((v, i) => {
+          const x = pad.left + i * (barW + barGap);
+          const bh = (v / 100) * chartH;
+          const y = pad.top + chartH - bh;
+          ctx.fillStyle = colors[i];
+          ctx.fillRect(x, y, barW, bh);
+          ctx.fillStyle = '#1a1a1a';
+          ctx.fillText(`${v}%`, x + barW / 2 - 12, y - 6);
+          ctx.fillText(labels[i], x + barW / 2 - 14, h - 12);
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new SlidePresentation();
+    });
+  </script>
+</body>
+</html>
