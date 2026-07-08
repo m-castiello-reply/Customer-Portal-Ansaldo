@@ -2,8 +2,9 @@
 
 **Feature Branch**: `001-customer-portal-document-integration`  
 **Created**: 2026-07-02  
+**Updated**: 2026-07-08 (kickoff meeting 08/07/2026)  
 **Status**: Draft  
-**Input**: User description: "Consolidare quanto emerso da trascrizione onboarding e WBS Cluster per produrre la specifica funzionale dello stream integrazione documentale"
+**Input**: User description: "Consolidare quanto emerso da trascrizione onboarding, WBS Cluster e kickoff meeting 08/07/2026 per produrre la specifica funzionale dello stream integrazione documentale"
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -74,6 +75,11 @@ Come PM o Tech Lead, voglio avere tracciabilita su assunzioni, esclusioni, dipen
 ### Edge Cases
 
 - Documento presente in Team Center ma non recuperabile da SPE per mismatch identificativo.
+- Transmittal con documenti associati parzialmente non disponibili (alcuni file presenti, altri mancanti).
+- Versione documento aggiornata in Team Center senza notifica esplicita a Salesforce (mancata sincronizzazione versione).
+- Download tracciato fallisce silenziosamente senza registrazione audit log.
+- Utente con ruolo multiplo (es. AEN TPM e Client) con visibilita conflittuale su stesso documento.
+- PBUS Hierarchy non ancora importata al momento del primo accesso al portale.
 - Timeout o indisponibilita temporanea del proxy on-prem durante inoltro APIM -> TC.
 - Permessi Microsoft Graph incompleti (upload consentito ma view negata o viceversa).
 - Incongruenza metadata tra Salesforce, SPE e Team Center (campi obbligatori mancanti).
@@ -98,6 +104,14 @@ Come PM o Tech Lead, voglio avere tracciabilita su assunzioni, esclusioni, dipen
 - **FR-009**: System MUST permettere integration test E2E sul percorso SF-AZURE-PROXY-TC prima delle milestone di go-live.
 - **FR-010**: System MUST esplicitare assunzioni ed esclusioni operative per ogni componente/fase di integrazione.
 - **FR-011**: System MUST mantenere separato il perimetro documentale dal perimetro ticketing IPS, salvo integrazioni esplicitamente approvate in analisi.
+- **FR-019**: System MUST supportare la gestione di versioning documenti con metadati strutturati per ogni versione rilasciata da Team Center.
+- **FR-020**: System MUST supportare la gestione di Transmittal objects come entita di spedizione documenti verso il portale cliente.
+- **FR-021**: System MUST garantire piena tracciabilita di ogni accesso e download di documento (chi, quando, quale versione).
+- **FR-022**: System MUST supportare la visualizzazione file (preview) senza obbligo di download, come funzionalita core del portale.
+- **FR-023**: System MUST esporre struttura PBUS (Plant > Block > Unit > System) come vista navigabile nel portale.
+- **FR-024**: System MUST differenziare la visibilita di oggetti e viste in base al ruolo utente configurato (Client, External Viewer, AEN Document Controller, AEN TPM, AEN Viewer, Plant Administrator).
+- **FR-025**: System MUST permettere ai clienti di approvare/rifiutare e commentare documenti, con gestione thread di risposte.
+- **FR-026**: System MUST integrare il flusso Early Warning proveniente dal Diagnostic System esterno per la creazione automatica di ticket IPS (fuori perimetro documentale ma da coordinare).
 - **FR-012**: System MUST applicare una policy server-side di classificazione file (preview vs download) senza delegare la decisione al client.
 - **FR-013**: System MUST consentire preview inline per PDF, immagini e formati testuali semplici tramite proxy.
 - **FR-014**: System MUST gestire preview dei file Office (DOCX/XLSX/PPTX) tramite conversione server-side in PDF/HTML.
@@ -126,6 +140,11 @@ Come PM o Tech Lead, voglio avere tracciabilita su assunzioni, esclusioni, dipen
 - **Permission Context**: insieme di autorizzazioni applicative e di rete necessarie a upload, retrieval e view file.
 - **Preview Policy**: regole per determinare se un formato e visualizzabile inline, convertibile o solo scaricabile.
 - **Access Token**: token temporaneo firmato per accesso a preview/download, con scadenza e vincoli di uso.
+- **Transmittal**: oggetto di spedizione che raggruppa uno o piu documenti inviati al portale, con metadati di ricezione e registro.
+- **Document Version**: versione specifica di un documento con propri metadati, stato di rilascio e riferimento a Team Center.
+- **PBUS Node**: nodo della gerarchia impiantistica (Plant/Block/Unit/System) usato come chiave di navigazione e visibilita documenti.
+- **User Role**: profilo applicativo che determina visibilita e azioni disponibili (Client, External Viewer, AEN Document Controller, AEN TPM, AEN Viewer, Plant Administrator).
+- **Download Audit Log**: registro immutabile di ogni azione di download con user, timestamp, documento e versione.
 
 ## Success Criteria *(mandatory)*
 
@@ -138,6 +157,31 @@ Come PM o Tech Lead, voglio avere tracciabilita su assunzioni, esclusioni, dipen
 - **SC-005**: Nessun blocker aperto su prerequisiti infrastrutturali critici (proxy reachability, Graph permissions, ambienti test) alla gate di integration test.
 - **SC-006**: Il 100% delle preview erogate in browser avviene tramite proxy senza esposizione di URL diretti SPE/Graph.
 - **SC-007**: Per i formati non supportati a preview (ZIP/CAD/altro), il 100% dei casi mostra fallback a download controllato senza errore bloccante lato utente.
+
+## Team e Attori (da kickoff 08/07/2026)
+
+- **Reply Microsoft** (Cluster): Elena Martini (Tech Lead), Matteo Castiello (Analyst), Damiano Leone (Senior Backend Developer) — responsabili integrazione SPE/APIM/proxy/TC.
+- **Reply Salesforce**: Chiara Ostuni (PM & Functional Lead), Mattia Diliberto, Andrea Baschieri, Luca Baudo, Francesca Galasso (Mulesoft), Stefano Masaneo (Architect).
+- **EasyPlus**: team TeamCenter (Davide Odetti, Adriano Chiavacci, Mattia Fasulo) — responsabili interfacce TC outbound.
+- **Ansaldo IT + Business**: SPoC unico per validazioni, UAT feedback giornaliero, account/PBUS hierarchy pre-import.
+
+## Milestone ufficiali (da Gantt kickoff)
+
+- **TC Outbound PBUS Interfaces Delivery**: deadline per disponibilita interfacce EasyPlus per gerarchia impiantistica.
+- **TC Outbound DM Interfaces Delivery**: deadline interfacce TC per document management outbound.
+- **Data Model Deploy (PBUS)**: deploy data model Salesforce pre-go-live ticketing.
+- **DM Data Model Deploy**: deploy data model document management pre-go-live DM.
+- **Inbound Interfaces Delivery**: delivery interfacce inbound (da Salesforce verso TC).
+- **Go-Live Ticketing IPS**: novembre 2026 (seconda settimana).
+- **Go-Live Document Management**: fine gennaio 2027.
+- **Prototype IPS**: fine settembre 2026.
+
+## Assunzioni operative (da kickoff)
+
+- SPoC Ansaldo disponibile per tutta la durata del progetto.
+- Anagrafiche (Account, PBUS Hierarchy, Projects, Historical Tickets) devono essere preimportate da Ansaldo prima del go-live.
+- UAT feedback condiviso da Ansaldo su base giornaliera.
+- Le sessioni di analisi sono strutturate per area tematica (Process Drill Down, Technical Integration, Data Access) con output documentati.
 
 ## Scope Boundaries (Assunzioni ed Esclusioni consolidate)
 

@@ -448,10 +448,10 @@
       <div class="slide-inner">
         <p class="slide-subtitle reveal">Customer Portal Ansaldo</p>
         <h1 class="slide-title reveal">Spec integrazione documentale<br />SF - APIM - SPE - Team Center</h1>
-        <p class="reveal">Presentazione basata su specifica funzionale consolidata da onboarding e WBS Cluster.</p>
+        <p class="reveal">Specifica funzionale consolidata da onboarding, WBS Cluster e kickoff meeting 08/07/2026.</p>
         <div class="cover-meta reveal">
           <span>Status: Draft</span>
-          <span>Data: 02/07/2026</span>
+          <span>Aggiornato: 08/07/2026</span>
           <span>Perimetro: Document Management</span>
         </div>
       </div>
@@ -467,7 +467,8 @@
           <div class="agenda-item"><div class="agenda-num">3</div><div>User stories prioritarie</div></div>
           <div class="agenda-item"><div class="agenda-num">4</div><div>Requisiti funzionali e non funzionali</div></div>
           <div class="agenda-item"><div class="agenda-num">5</div><div>Entita chiave, edge case e metriche di successo</div></div>
-          <div class="agenda-item"><div class="agenda-num">6</div><div>Rischi, dipendenze e prossimi passi</div></div>
+          <div class="agenda-item"><div class="agenda-num">6</div><div>Team, milestone e assunzioni operative</div></div>
+          <div class="agenda-item"><div class="agenda-num">7</div><div>Rischi, dipendenze e prossimi passi</div></div>
         </div>
       </div>
     </section>
@@ -567,14 +568,16 @@
           <article class="card">
             <h3>Edge Cases critici</h3>
             <ul class="clean">
-              <li>Mismtach identificativo file TC/SPE/SF</li>
+              <li>Mismatch identificativo file TC/SPE/SF</li>
+              <li>Transmittal con documenti parzialmente non disponibili</li>
+              <li>Versione TC aggiornata senza notifica a Salesforce</li>
+              <li>Download tracciato fallisce senza registrazione audit log</li>
+              <li>Utente multi-ruolo con visibilita conflittuale</li>
+              <li>PBUS Hierarchy non importata al primo accesso portale</li>
               <li>Timeout proxy on-prem o APIM</li>
               <li>Permessi Graph incompleti</li>
-              <li>Metadata obbligatori mancanti</li>
-              <li>Accesso non autorizzato in view file</li>
               <li>Formato non supportato: fallback obbligatorio a download</li>
               <li>Token preview scaduto/alterato o riutilizzato</li>
-              <li>HTML EML/MSG non sanificato in preview</li>
             </ul>
           </article>
         </div>
@@ -584,27 +587,32 @@
     <section class="slide" data-title="Requisiti Funzionali">
       <div class="slide-inner">
         <h2 class="slide-title reveal">Requisiti Funzionali</h2>
-        <p class="slide-subtitle reveal">Estratto FR-001...FR-018</p>
+        <p class="slide-subtitle reveal">Estratto FR-001...FR-026</p>
         <div class="grid-2 reveal">
           <article class="card">
             <h3>Core Flow</h3>
             <ul class="clean">
-              <li>FR-001/002: acquisizione e trasferimento file lungo la catena SF-APIM-Proxy-TC</li>
-              <li>FR-003/004: upload SPE, identificativo univoco e view nel portale</li>
-              <li>FR-005/006: supporto completo a CommentSheet e retrieval da SPE</li>
-              <li>FR-017: nessuna esposizione URL diretta SPE/Graph al browser</li>
+              <li>FR-001/002: acquisizione e trasferimento file SF-APIM-Proxy-TC</li>
+              <li>FR-003/004: upload SPE, identificativo e view portale</li>
+              <li>FR-005/006: CommentSheet e retrieval da SPE</li>
+              <li>FR-017: no URL diretti SPE/Graph al browser</li>
+              <li>FR-019: versioning documenti con metadati strutturati</li>
+              <li>FR-020: Transmittal objects per spedizione documenti</li>
+              <li>FR-021: tracciabilita completa accessi e download</li>
+              <li>FR-022: preview file senza obbligo di download</li>
             </ul>
           </article>
           <article class="card">
-            <h3>Controlli, Formati e Accesso</h3>
+            <h3>Controlli, Accesso e Ruoli</h3>
             <ul class="clean">
-              <li>FR-007: esiti con codici errore + correlation id</li>
-              <li>FR-008: log tecnici su ogni hop</li>
+              <li>FR-007/008: esiti+correlation id e log ogni hop</li>
               <li>FR-009: integration test E2E obbligatori</li>
               <li>FR-012: policy server-side preview vs download</li>
-              <li>FR-013/014/015: preview PDF/immagini/Office/EML-MSG via proxy</li>
-              <li>FR-016: ZIP/CAD con download controllato</li>
-              <li>FR-018: endpoint dedicati preview/download con auth Salesforce</li>
+              <li>FR-013/014/015: preview PDF/Office/EML-MSG via proxy</li>
+              <li>FR-016: ZIP/CAD download controllato</li>
+              <li>FR-023: PBUS vista navigabile nel portale</li>
+              <li>FR-024: visibilita per ruolo (6 profili)</li>
+              <li>FR-025: approvazione/commenti documenti con thread</li>
             </ul>
           </article>
         </div>
@@ -633,12 +641,14 @@
             <h3>Key Entities</h3>
             <ul class="clean">
               <li>Project</li>
-              <li>Document</li>
+              <li>Document / Document Version</li>
               <li>CommentSheet</li>
+              <li>Transmittal</li>
+              <li>PBUS Node</li>
+              <li>User Role (6 profili)</li>
               <li>Integration Transaction</li>
-              <li>Permission Context</li>
-              <li>Preview Policy</li>
-              <li>Access Token</li>
+              <li>Preview Policy / Access Token</li>
+              <li>Download Audit Log</li>
             </ul>
           </article>
         </div>
@@ -666,20 +676,56 @@
       </div>
     </section>
 
+    <section class="slide" data-title="Team e Attori">
+      <div class="slide-inner">
+        <h2 class="slide-title reveal">Team e Attori</h2>
+        <p class="slide-subtitle reveal">Da kickoff 08/07/2026</p>
+        <div class="grid-2 reveal">
+          <article class="card">
+            <h3>Reply Microsoft (Cluster)</h3>
+            <ul class="clean">
+              <li>Elena Martini — Tech Lead</li>
+              <li>Matteo Castiello — Analyst</li>
+              <li>Damiano Leone — Senior Backend Developer</li>
+            </ul>
+            <h3 style="margin-top:0.7rem">EasyPlus (Team Center)</h3>
+            <ul class="clean">
+              <li>Davide Odetti</li>
+              <li>Adriano Chiavacci</li>
+              <li>Mattia Fasulo</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Reply Salesforce</h3>
+            <ul class="clean">
+              <li>Chiara Ostuni — PM &amp; Functional Lead</li>
+              <li>Stefano Masaneo — Architect</li>
+              <li>Mattia Diliberto, Andrea Baschieri, Luca Baudo</li>
+              <li>Francesca Galasso — Mulesoft</li>
+            </ul>
+            <h3 style="margin-top:0.7rem">Ansaldo IT + Business</h3>
+            <ul class="clean">
+              <li>SPoC unico per validazioni e UAT</li>
+              <li>Feedback UAT giornaliero</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="slide" data-title="Timeline WBS">
       <div class="slide-inner">
-        <h2 class="slide-title reveal">Timeline di riferimento (WBS)</h2>
-        <p class="slide-subtitle reveal">Sequenza maggio - settembre 2026</p>
+        <h2 class="slide-title reveal">Milestone ufficiali (Gantt kickoff)</h2>
+        <p class="slide-subtitle reveal">Sequenza fino a gennaio 2027</p>
 
-        <div class="timeline reveal">
-          <div class="time-step"><strong>Maggio</strong>Analisi interfacce e fonti</div>
-          <div class="time-step"><strong>Giugno</strong>Setup SPE / APIM / proxy on-prem</div>
-          <div class="time-step"><strong>Luglio</strong>Sviluppo flussi upload-view-commentsheet</div>
-          <div class="time-step"><strong>Agosto</strong>Documentazione tecnica e consolidamento</div>
-          <div class="time-step"><strong>Settembre</strong>Integration test E2E e supporto UAT</div>
+        <div class="timeline reveal" style="grid-template-columns: repeat(4, 1fr)">
+          <div class="time-step"><strong>Lug–Ago</strong>Analisi, setup SPE/APIM/proxy, analisi interfacce TC</div>
+          <div class="time-step"><strong>Set–Ott</strong>TC Outbound PBUS + DM Interfaces Delivery — EasyPlus milestone</div>
+          <div class="time-step"><strong>Nov 2026</strong>Go-Live Ticketing IPS + Data Model Deploy PBUS</div>
+          <div class="time-step"><strong>Gen 2027</strong>DM Data Model Deploy &amp; Go-Live Document Management</div>
         </div>
 
-        <p class="small reveal">Dipendenze chiave: connettivita proxy, permessi Graph, disponibilita interfacce Team Center.</p>
+        <p class="small reveal">Dipendenze Cluster: TC Outbound DM Interfaces Delivery da EasyPlus, permessi Graph, proxy on-prem reachability.</p>
       </div>
     </section>
 
